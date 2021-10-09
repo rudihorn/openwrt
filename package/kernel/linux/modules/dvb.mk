@@ -17,6 +17,7 @@ define KernelPackage/mc
   KCONFIG := \
   CONFIG_MEDIA_CONTROLLER=y \
 	CONFIG_MEDIA_SUPPORT=m \
+	CONFIG_MEDIA_SUBDRV_AUTOSELECT=y \
 	CONFIG_VIDEO_KERNEL_VERSION=y
   FILES := $(LINUX_DIR)/drivers/media/mc/mc.ko
   AUTOLOAD := $(call AutoProbe,mc)
@@ -288,13 +289,12 @@ $(eval $(call KernelPackage,cx231xx-dvb-ci))
 
 define KernelPackage/dvb-usb-rtl28xxu
   TITLE := Realtek RTL28xxU DVB USB support
+  SUBMENU := $(DVB_MENU)
   KCONFIG := \
-	CONFIG_REGMAP_I2C \
 	CONFIG_DVB_USB_RTL28XXU
-  FILES := $(LINUX_DIR)/drivers/media/usb/dvb-usb-rtl28xxu.ko
+  FILES := $(LINUX_DIR)/drivers/media/usb/dvb-usb-v2/dvb-usb-rtl28xxu.ko
   AUTOLOAD := $(call AutoProbe,56,dvb-usb-rtl28xxu)
-  DEPENDS := +kmod-i2c-core +kmod-regmap-i2c
-  $(call AddDepends/dvb-usb-v2)
+  DEPENDS := +kmod-i2c-core +kmod-regmap-i2c +kmod-dvb-usb-v2
 endef
 
 define KernelPackage/dvb-usb-rtl28xxu/description
@@ -302,3 +302,17 @@ define KernelPackage/dvb-usb-rtl28xxu/description
 endef
 $(eval $(call KernelPackage,dvb-usb-rtl28xxu))
 
+define DvbFrontend
+  SUBMENU := $(DVB_MENU)
+  KCONFIG := $2
+  DEPENDS := +kmod-i2c-core
+  FILES := $(LINUX_DIR)/drivers/media/dvb-frontends/$1.ko
+  AUTOLOAD := $(call AutoProbe,$1)
+endef
+
+define KernelPackage/dvb-cxd2841er
+  TITLE := Sony CXD2841ER
+  $(call DvbFrontend,cxd2841er,CONFIG_DVB_CXD2841ER)
+  DEPENDS += +kmod-dvb-core
+endef
+$(eval $(call KernelPackage,dvb-cxd2841er))
